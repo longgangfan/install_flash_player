@@ -1,0 +1,53 @@
+# !/bin/bash
+##Get the offical remote latest version number
+version=`curl -s http://get.adobe.com/cn/flashplayer/about/ | sed -n '/Firefox - NPAPI/,/<\/tr/s/[^>]*>\([0-9].*\)<.*/\1/p' | tail -1`
+##Convert version strings to numberic
+ncode=${version//./}
+##Check the installation path for firefox plugins
+installedpath=`locate -w libflashplayer.so | tail -1`
+if [ "$installedpath" != "" ]
+then
+##Get the version of local installed flashplayer
+installedversion=`strings $installedpath |grep LNX| awk '{print $2}'`
+##Convert version strings to numberic
+icode=${installedversion//,/}
+##Comparing the local version number with remote version number
+if [ $icode -eq $ncode ]
+then
+echo "You already have the latest version!" && exit
+else 
+echo "You need install the latest version!"
+##Create a temporary directory
+mkdir /tmp/flashplayertemp
+cd /tmp/flashplayertemp
+##Download the latest flahplayer package
+wget --user-agent="Mozilla/5.0" -S  https://fpdownload.adobe.com/get/flashplayer/pdc/$version/flash_player_npapi_linux.x86_64.tar.gz
+##Extract the package
+tar -xzf *.gz
+##Copy the files to destination directories
+sudo cp -R /tmp/flashplayertemp/usr/* /usr/
+sudo cp /tmp/flashplayertemp/libflashplayer.so $installedpath
+
+cd ~
+##Clean the temporary directory
+rm -rf /tmp/flashplayertemp
+echo "Evething is done, enjoy your firefox!"
+fi
+else
+##Create a temporary directory
+mkdir /tmp/flashplayertemp
+cd /tmp/flashplayertemp
+##Download the latest flahplayer package
+wget --user-agent="Mozilla/5.0" -S  https://fpdownload.adobe.com/get/flashplayer/pdc/$version/flash_player_npapi_linux.x86_64.tar.gz
+##Extract the package
+tar -xzf *.gz
+installedpath=`locate *firefox-addons`
+##Copy the files to destination directories
+sudo cp -R /tmp/flashplayertemp/usr/* /usr/
+sudo cp /tmp/flashplayertemp/libflashplayer.so $installedpath/plugins
+
+cd ~
+##Clean the temporary directory
+rm -rf /tmp/flashplayertemp
+echo "Evething is done, enjoy your firefox!"
+fi
